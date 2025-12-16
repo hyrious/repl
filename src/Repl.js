@@ -59,6 +59,29 @@ class Repl extends Component {
     );
   }
 
+  componentDidMount() {
+    const hash = window.location.hash.slice(1);
+    const state = decodeURIComponent(escape(atob(hash))).split('\0');
+    if (state[0]) {
+      this._updateTerserOptions(state[0]);
+    }
+    if (state[1]) {
+      this._updateCode(state[1]);
+    }
+  }
+
+  componentDidUpdate(_p, s) {
+    if (
+      s.optionsCode !== this.state.optionsCode ||
+      s.code !== this.state.code
+    ) {
+      const state = [this.state.optionsCode, this.state.code].join('\0');
+      const hash = btoa(unescape(encodeURIComponent(state))).replace(/=+$/, '');
+      const next = hash ? '#' + hash : window.location.pathname;
+      window.history.replaceState(null, '', next);
+    }
+  }
+
   _updateCode = code => {
     this.setState({
       code,
@@ -72,6 +95,7 @@ class Repl extends Component {
       const parsedOptions = evalOptions(options);
 
       this.setState({
+        optionsCode: options,
         terserOptions: parsedOptions,
         optionsErrorMessage: null
       });
